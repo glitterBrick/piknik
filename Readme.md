@@ -155,11 +155,15 @@ the actual picker code and exercise its events without needing a browser.
 
 ## Publish a release
 
-1. Choose a tested source commit and give it a version tag, such as `v0.1.0`.
-2. From that exact commit, run `npm ci` and `npm run build:offline`.
-3. Create a GitHub release for the tag and attach `dist/piknik-offline.html`
-   as a downloadable asset. Describe the changes and known limitations.
-4. Check that the attached file opens and works without internet access.
+1. Update `.github/release-notes.md` for the version and commit the changes.
+2. Choose the tested source commit, give it a version tag such as `v0.1.0`,
+   and push that tag to this fork.
+3. The [release workflow](.github/workflows/release.yml) installs the locked
+   dependencies, runs `npm test`, and builds the offline file from that tag.
+   If those steps pass, it publishes a GitHub release with
+   `piknik-offline.html` attached.
+4. Check the workflow on the [Actions page](https://github.com/glitterBrick/piknik/actions)
+   and try the release download without internet access.
 
 GitHub supplies source code ZIP and tar archives for the same tag. The HTML
 attachment is the ready-to-use version; the archives are the source for that
