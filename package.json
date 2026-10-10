@@ -1,6 +1,8 @@
 {
   "scripts": {
     "build": "esbuild js.js --bundle --minify --outfile=bundle.js",
+    "build:offline": "node scripts/build-offline.mjs",
+    "test": "node --test",
     "watch": "esbuild js.js --bundle --sourcemap --outfile=bundle.js --watch"
   },
   "devDependencies": {

@@ -8,18 +8,22 @@
   <body>
     <div class="xhair"><span></span><span></span><span></span><span></span></div>
     <form>
+      <!-- online-only:start -->
       <div class="btn">
         <a class="github-button" href="https://github.com/arnemart/piknik" data-icon="octicon-star" aria-label="Star arnemart/piknik on GitHub">Star</a>
       </div>
       <div class="btn r">
         <a href="https://twitter.com/intent/tweet?text=Full%20screen%20color%20picker&amp;url=https%3A%2F%2Fcolor.aurlien.net" target="_blank" rel="noopener noreferrer">Share</a>
       </div>
+      <!-- online-only:end -->
       <span>Click to lock color — Scroll to change luminosity</span>
-      <input>
+      <input aria-label="Color hex code">
       <button type="button">copy</button>
       <span id="copy-status" role="status" aria-live="polite"></span>
     </form>
     <script src="bundle.js"></script>
+    <!-- online-only:start -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!-- online-only:end -->
   </body>
 </html>

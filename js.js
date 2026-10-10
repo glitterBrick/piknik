@@ -42,25 +42,28 @@ document.addEventListener('wheel', function(e) {
     deltaY *= window.innerHeight;
   }
   z = Math.max(0, Math.min(100, z + deltaY / 10));
-  setColor();
+  setHSL(current[0], current[1], z);
 }, { passive: false });
 
 function setHSL(h, s, l) {
-  setColor.apply(null, convert.hsl.rgb(h, s, l));
+  current = [h, s, l];
+  z = l;
+  renderColor('#' + convert.hsl.hex(h, s, l));
 }
 
 function setColor(r, g, b) {
-  var hex;
   if (r != null) {
-    hex = '#' + convert.rgb.hex(r, g, b);
-    current = convert.rgb.hsl(r, g, b);
+    current = convert.rgb.hsl.raw(r, g, b);
+    z = current[2];
+    renderColor('#' + convert.rgb.hex(r, g, b));
   } else {
     var h = x / window.innerWidth * 360;
     var s = 100 - (y / window.innerHeight * 100);
-    var l = z;
-    current = [h, s, l];
-    hex = '#' + convert.hsl.hex(h, s, l);
+    setHSL(h, s, z);
   }
+}
+
+function renderColor(hex) {
   currentHex = hex;
   ctx.fillStyle = hex;
   ctx.fillRect(0, 0, 16, 16);
@@ -76,10 +79,19 @@ function setColor(r, g, b) {
   }
   document.body.style.backgroundColor = hex;
   input.value = hex;
+  clearInputError();
+  copyStatus.textContent = '';
+  if (!picking) {
+    positionCrosshair();
+    window.history.replaceState(null, '', hex);
+  }
 }
 
 button.addEventListener('click', function(e) {
   e.preventDefault();
+  if (!applyInputColor()) {
+    return;
+  }
   if (!window.isSecureContext || !navigator.clipboard || !navigator.clipboard.writeText) {
     input.focus();
     input.select();
@@ -98,10 +110,28 @@ button.addEventListener('click', function(e) {
 
 form.addEventListener('submit', function(e) {
   e.preventDefault();
-  fromString(input.value);
-  lock();
+  applyInputColor();
 });
 
+function applyInputColor() {
+  // Re-parsing an unchanged black or white hex would erase the saved hue.
+  if (input.value !== currentHex && !fromString(input.value)) {
+    input.setCustomValidity('Enter a 3- or 6-digit hex code, or a color name such as blue.');
+    input.setAttribute('aria-invalid', 'true');
+    input.reportValidity();
+    return false;
+  }
+  clearInputError();
+  lock();
+  return true;
+}
+
+function clearInputError() {
+  input.setCustomValidity('');
+  input.removeAttribute('aria-invalid');
+}
+
+input.addEventListener('input', clearInputError);
 input.addEventListener('focus', input.select);
 input.addEventListener('click', input.select);
 
@@ -118,13 +148,17 @@ document.addEventListener('click', function(e) {
 function lock() {
   picking = false;
   document.body.className = "";
+  positionCrosshair();
+  if (currentHex) {
+    window.location.hash = currentHex;
+  }
+}
+
+function positionCrosshair() {
   if (current) {
     var x = current[0] / 360 * window.innerWidth;
     var y = (100 - current[1]) / 100 * window.innerHeight;
     div.style.transform = 'translateX(' + x +'px) translateY(' + y + 'px)';
-  }
-  if (currentHex) {
-    window.location.hash = currentHex;
   }
 }
 
@@ -140,14 +174,14 @@ function unlock(e) {
 }
 
 function fromString(str) {
-  str = str.trim().replace(/^#/, '');
-  var matches = str.trim().match(/^(([a-fA-F0-9]{3}){1,2})/);
+  str = str.trim();
+  var matches = str.match(/^#?([a-fA-F0-9]{3}|[a-fA-F0-9]{6})$/);
   if (matches) {
     setColor.apply(null, convert.hex.rgb(matches[1]));
     return true;
-  } else if (str.length > 0) {
+  } else if (/^[a-z]+$/i.test(str)) {
     try {
-      setColor.apply(null, convert.keyword.rgb(str.trim().toLowerCase()));
+      setColor.apply(null, convert.keyword.rgb(str.toLowerCase()));
       return true;
     } catch (e) { }
   }
