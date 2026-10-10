@@ -77,6 +77,12 @@ button {
   cursor: pointer;
 }
 
+#copy-status {
+  align-self: center;
+  font-size: 12px;
+  padding: 0 0.5em;
+}
+
 .picking button {
   opacity: 0;
 }

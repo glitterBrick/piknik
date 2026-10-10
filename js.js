@@ -1,5 +1,4 @@
-var convert = require('color-convert');
-var copy = require('copy-to-clipboard');
+import convert from 'color-convert';
 
 var x = 0, y = 0, z = 50;
 
@@ -13,6 +12,7 @@ var currentHex;
 var form = document.querySelector('form');
 var input = document.querySelector('input');
 var button = document.querySelector('button');
+var copyStatus = document.querySelector('#copy-status');
 var div = document.querySelector('.xhair');
 
 var canvas = document.createElement('canvas');
@@ -21,8 +21,8 @@ canvas.height = 16;
 var ctx = canvas.getContext('2d');
 
 var link = document.createElement('link');
-link.type = 'image/x-icon';
-link.rel = 'shortcut icon';
+link.type = 'image/png';
+link.rel = 'icon';
 document.querySelector('head').appendChild(link);
 
 document.addEventListener('mousemove', function(e) {
@@ -33,11 +33,17 @@ document.addEventListener('mousemove', function(e) {
   }
 });
 
-document.addEventListener('mousewheel', function(e) {
+document.addEventListener('wheel', function(e) {
   e.preventDefault();
-  z = Math.max(0, Math.min(100, z + e.deltaY / 10));
+  var deltaY = e.deltaY;
+  if (e.deltaMode === 1) {
+    deltaY *= 40;
+  } else if (e.deltaMode === 2) {
+    deltaY *= window.innerHeight;
+  }
+  z = Math.max(0, Math.min(100, z + deltaY / 10));
   setColor();
-});
+}, { passive: false });
 
 function setHSL(h, s, l) {
   setColor.apply(null, convert.hsl.rgb(h, s, l));
@@ -58,7 +64,7 @@ function setColor(r, g, b) {
   currentHex = hex;
   ctx.fillStyle = hex;
   ctx.fillRect(0, 0, 16, 16);
-  link.href = canvas.toDataURL("image/x-icon");
+  link.href = canvas.toDataURL('image/png');
   document.title = hex;
 
   if (dark && current[2] >= 40) {
@@ -74,8 +80,19 @@ function setColor(r, g, b) {
 
 button.addEventListener('click', function(e) {
   e.preventDefault();
-  copy(input.value, {
-    debug: true
+  if (!window.isSecureContext || !navigator.clipboard || !navigator.clipboard.writeText) {
+    input.focus();
+    input.select();
+    copyStatus.textContent = 'Select and copy the color';
+    return;
+  }
+
+  navigator.clipboard.writeText(input.value).then(function() {
+    copyStatus.textContent = 'Copied';
+  }, function() {
+    input.focus();
+    input.select();
+    copyStatus.textContent = 'Copy unavailable; select the color';
   });
 });
 
